@@ -1,7 +1,7 @@
 // This file is public: no content here. Everything shown on the card is loaded
 // from the backend (scriptUrl), and only for valid personal codes.
 window.CONFIG = {
-  scriptUrl: "",
+  scriptUrl: "https://script.google.com/macros/s/AKfycbzKT59q_qT0X__WjEbNV0yvZNLWicEXLZKT12iSX_rQ-3kOEWVMji7fimGc3JI7M6p1zg/exec",
 
   // Used only when scriptUrl is empty: open index.html?g=demo to preview the layout.
   demo: {
