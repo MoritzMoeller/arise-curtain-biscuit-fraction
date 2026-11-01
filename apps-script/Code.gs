@@ -70,7 +70,7 @@ function onOpen() {
 function createLinks() {
   const settings = readSettings();
   if (!settings.siteUrl) throw new Error('Bitte "siteUrl" im Tab Einstellungen eintragen.');
-  const sheet = SpreadsheetApp.getActive().getSheetByName(GUESTS);
+  const sheet = tab(GUESTS);
   const rows = sheet.getDataRange().getValues();
   const used = new Set(rows.map((r) => String(r[0])));
   for (let i = 1; i < rows.length; i++) {
@@ -99,9 +99,18 @@ function randomCode() {
 
 // ---------- helpers ----------
 
+// Find a tab by name, ignoring case, spaces and how the umlaut is encoded.
+function findTab(name) {
+  const norm = (s) => s.normalize("NFC").trim().toLowerCase();
+  return SpreadsheetApp.getActive().getSheets().find((s) => norm(s.getName()) === norm(name)) || null;
+}
+
 function tab(name) {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(name);
-  if (!sheet) throw new Error(`Tab "${name}" fehlt.`);
+  const sheet = findTab(name);
+  if (!sheet) {
+    const names = SpreadsheetApp.getActive().getSheets().map((s) => `"${s.getName()}"`).join(", ");
+    throw new Error(`Tab "${name}" fehlt. Vorhanden: ${names}`);
+  }
   return sheet;
 }
 
@@ -130,7 +139,7 @@ function findGuest(code) {
 }
 
 function findAnswer(code) {
-  const sheet = SpreadsheetApp.getActive().getSheetByName(ANSWERS);
+  const sheet = findTab(ANSWERS);
   if (!sheet) return null;
   const rows = sheet.getDataRange().getValues();
   const jsonCol = rows[0].length - 1;
@@ -140,7 +149,7 @@ function findAnswer(code) {
 
 function answersSheet(options) {
   const ss = SpreadsheetApp.getActive();
-  let sheet = ss.getSheetByName(ANSWERS);
+  let sheet = findTab(ANSWERS);
   if (!sheet) {
     sheet = ss.insertSheet(ANSWERS);
     sheet.appendRow(["code", "gespeichert", "Person", ...options, "Sonstiges", "json"]);
