@@ -1,3 +1,4 @@
+/** @OnlyCurrentDoc */
 /**
  * Backend for the card: a Google Sheet + this script, deployed as a web app.
  * All content lives in the sheet; nothing is returned without a valid code.
