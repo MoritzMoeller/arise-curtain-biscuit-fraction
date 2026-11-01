@@ -1,6 +1,8 @@
 (function () {
   const C = window.CONFIG;
-  const code = (new URLSearchParams(location.search).get("g") || "").trim();
+  const params = new URLSearchParams(location.search);
+  const code = (params.get("g") || "").trim();
+  if (params.has("nacht")) document.body.dataset.theme = "night";
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -17,17 +19,22 @@
     const greens = ["#6d7a3a", "#8a9a48", "#55652e", "#a3ad5a"];
     let s = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">`;
     s += `<path d="M0 ${h * 0.55} Q ${w * 0.3} ${h * 0.42} ${w * 0.55} ${h * 0.52} T ${w} ${h * 0.48} V ${h} H 0 Z" fill="#a3ad5a" opacity=".55"/>`;
+    // the breeze: each piece sways with a delay that depends on x, so gusts travel across
+    const wave = (x) => `animation-delay:${(-(1 - x / w) * 2.4 - r() * 0.4).toFixed(2)}s`;
+    const strips = Array.from({ length: 10 }, () => "");
     for (let i = 0; i < 140; i++) {
       const x = r() * w, len = 25 + r() * 55, bend = (r() - 0.5) * 30;
-      s += `<path d="M${x} ${h} q ${bend / 2} ${-len / 2} ${bend} ${-len}" stroke="${greens[i % 4]}" stroke-width="${1 + r() * 1.6}" fill="none" stroke-linecap="round"/>`;
+      strips[Math.floor((x / w) * 10)] += `<path d="M${x} ${h} q ${bend / 2} ${-len / 2} ${bend} ${-len}" stroke="${greens[i % 4]}" stroke-width="${1 + r() * 1.6}" fill="none" stroke-linecap="round"/>`;
     }
+    strips.forEach((g, k) => (s += `<g class="grass" style="${wave((k + 0.5) * w / 10)}">${g}</g>`));
     for (let i = 0; i < 26; i++) {
       const x = 8 + r() * (w - 16), y = h * 0.35 + r() * h * 0.5, t = r();
-      s += `<path d="M${x} ${h} Q ${x + (r() - 0.5) * 12} ${(y + h) / 2} ${x} ${y}" stroke="#55652e" stroke-width="1.4" fill="none"/>`;
-      if (t < 0.32) s += daisy(x, y, 5 + r() * 3);
-      else if (t < 0.55) s += poppy(x, y, 6 + r() * 4);
-      else if (t < 0.8) s += cornflower(x, y, 4 + r() * 2);
-      else s += `<circle cx="${x}" cy="${y}" r="${2.5 + r() * 1.5}" fill="#d8a624"/>`;
+      let f = `<path d="M${x} ${h} Q ${x + (r() - 0.5) * 12} ${(y + h) / 2} ${x} ${y}" stroke="#55652e" stroke-width="1.4" fill="none"/>`;
+      if (t < 0.32) f += daisy(x, y, 5 + r() * 3);
+      else if (t < 0.55) f += poppy(x, y, 6 + r() * 4);
+      else if (t < 0.8) f += cornflower(x, y, 4 + r() * 2);
+      else f += `<circle cx="${x}" cy="${y}" r="${2.5 + r() * 1.5}" fill="#d8a624"/>`;
+      s += `<g class="flower" style="${wave(x)};animation-duration:${(3.6 + r() * 1.4).toFixed(2)}s">${f}</g>`;
     }
     return s + "</svg>";
   }
@@ -56,8 +63,20 @@
   $$(".meadow").forEach((el) => (el.innerHTML = meadowSVG(7)));
   $$(".mountains").forEach((el) => (el.innerHTML = mountainsSVG));
 
+  // sky: sun (a moon at night), stars and fireflies; the stars and fireflies only show at night
+  function sky(seed) {
+    const r = rng(seed);
+    const dot = (cls, n, place) =>
+      Array.from({ length: n }, () => `<i class="${cls}" style="${place()};animation-delay:${(-r() * 6).toFixed(2)}s;animation-duration:${(2.5 + r() * 3.5).toFixed(2)}s"></i>`).join("");
+    $$(".sky").forEach((el) => (el.innerHTML = `<div class="sun"></div>` +
+      dot("star", 40, () => `left:${(r() * 100).toFixed(1)}%;top:${(r() * 62).toFixed(1)}%;--s:${(1 + r() * 2).toFixed(1)}px`)));
+    $$(".flies").forEach((el) => (el.innerHTML =
+      dot("fly", 12, () => `left:${(5 + r() * 90).toFixed(1)}%;top:${(r() * 80).toFixed(1)}%;--dx:${((r() - 0.5) * 60).toFixed(0)}px;--dy:${(-10 - r() * 30).toFixed(0)}px`)));
+  }
+  sky(11);
+
   // ---------- backend: Apps Script, or built-in demo data ----------
-  const api = C.scriptUrl
+  const api = C.scriptUrl && code !== "demo"
     ? {
         async load(code) {
           const res = await fetch(`${C.scriptUrl}?code=${encodeURIComponent(code)}`);

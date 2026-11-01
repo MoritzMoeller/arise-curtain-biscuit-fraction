@@ -138,13 +138,78 @@ body[data-state="loading"] .gate { display: none; }
 }
 .dots button[aria-current="true"] { background: var(--mustard); }
 
+/* ---------- motion: breeze, sun, stars, fireflies ---------- */
+.grass, .flower { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 4.2s ease-in-out infinite alternate; }
+.grass { animation-name: bend; animation-duration: 4.8s; }
+@keyframes sway { from { transform: rotate(-3.5deg); } to { transform: rotate(2.5deg); } }
+@keyframes bend { from { transform: skewX(-5deg); } to { transform: skewX(3deg); } }
+
+.sky { position: absolute; inset: 92px 0 140px; z-index: 0; }
+.sun {
+  position: absolute; right: 14%; bottom: 40px; width: 46px; height: 46px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #ffe7a3, #f2b632 70%);
+}
+.sun::before, .sun::after { content: ""; position: absolute; border-radius: 50%; z-index: -1; }
+.sun::before { /* slowly turning rays */
+  inset: -30px;
+  background: repeating-conic-gradient(rgba(242, 182, 50, .45) 0 5deg, transparent 5deg 30deg);
+  -webkit-mask: radial-gradient(circle, transparent 26px, #000 27px, transparent 72%);
+          mask: radial-gradient(circle, transparent 26px, #000 27px, transparent 72%);
+  animation: spin 60s linear infinite;
+}
+.sun::after { /* soft shimmer */
+  inset: -16px; background: radial-gradient(circle, rgba(255, 214, 110, .6), transparent 70%);
+  animation: glow 3.5s ease-in-out infinite alternate;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes glow { from { opacity: .4; transform: scale(.9); } to { opacity: 1; transform: scale(1.15); } }
+
+.star, .fly { position: absolute; display: none; border-radius: 50%; }
+.star { width: var(--s); height: var(--s); background: #fff8e0; animation: twinkle 4s ease-in-out infinite alternate; }
+@keyframes twinkle { from { opacity: .15; } to { opacity: 1; } }
+.flies { position: absolute; left: 0; right: 0; bottom: 0; height: 150px; z-index: 1; pointer-events: none; }
+.fly {
+  width: 4px; height: 4px; background: #fff3a0; box-shadow: 0 0 8px 3px rgba(255, 236, 140, .55);
+  animation: drift 6s ease-in-out infinite alternate;
+}
+@keyframes drift {
+  0% { transform: translate(0, 0); opacity: 0; }
+  30%, 70% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+}
+
+/* ---------- night (try it with &nacht in the link) ---------- */
+body[data-theme="night"] {
+  --cream: #182d3c;
+  --ink: #f3ead6;
+  --ink-soft: #b5b0a4;
+  --line: rgba(243, 234, 214, .2);
+  --campari: #f07a5f;
+  --teal: #8fd0d2;
+  background: #0b1820;
+}
+body[data-theme="night"] h1 .amp { color: var(--mustard); }
+body[data-theme="night"] .awning { filter: brightness(.75); }
+body[data-theme="night"] .meadow { filter: brightness(.42) saturate(.7) hue-rotate(10deg); }
+body[data-theme="night"] .mountains { filter: brightness(.38) saturate(.6); }
+body[data-theme="night"] .star, body[data-theme="night"] .fly { display: block; }
+body[data-theme="night"] .sun { background: radial-gradient(circle at 38% 38%, #fffbea, #e6dcbc 75%); }
+body[data-theme="night"] .sun::before { display: none; }
+body[data-theme="night"] .sun::after { background: radial-gradient(circle, rgba(255, 250, 225, .35), transparent 70%); }
+body[data-theme="night"] .check input:checked::after { color: #182d3c; }
+@media (max-width: 520px) { body[data-theme="night"] .dots { background: rgba(11, 24, 32, .6); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .grass, .flower, .sun::before, .sun::after, .star, .fly { animation: none !important; }
+}
+
 /* ---------- print: four A6 pages = one folded A5 card ---------- */
 @media print {
   @page { size: A6; margin: 0; }
   body { background: none; display: block; overflow: visible; font-size: 9pt; }
   .deck { display: block; width: auto; height: auto; overflow: visible; box-shadow: none; }
   .screen { width: 105mm; height: 148mm; overflow: hidden; break-after: page; }
-  .dots, #rsvp { display: none !important; }
+  .dots, #rsvp, .flies { display: none !important; }
   .inner { padding: 10mm 9mm; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
